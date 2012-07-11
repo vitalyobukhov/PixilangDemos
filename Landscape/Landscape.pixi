@@ -1,0 +1,476 @@
+﻿//------------------------------------------------------------
+// Landscape demo
+// by Vitaly Obukhov
+// December 2008
+//------------------------------------------------------------
+
+w = get_window_xsize
+h = get_window_ysize
+rand_max = 32767
+
+init_star
+place_stars
+init_house
+place_houses
+init_tree
+
+f = 0
+draw:
+
+draw_back
+draw_stars
+draw_moon
+draw_houses
+draw_trees
+frame(100)
+
+goto draw
+
+
+draw_trees:
+
+  treex = get_pixi_xsize(tree)
+  treey = get_pixi_ysize(tree)
+  tcount = w / treex / 2
+  tscale = 3
+
+  i = 0
+  while(i < tcount)
+  {
+    fpixi(tree, -w / 2 + treex + treex * i * 2, h / 2 - treey, 1, 0, 0)
+    i + 1
+  }
+
+  treex / tscale
+  treey / tscale
+  tcount = w / treex / 2 - 1
+
+  i = 0
+  while(i < tcount)
+  {
+    fpixi(tree, -w / 2 + treex * tscale + treex * i * 2, h / 4 + treey * 5 / 2, 1, 0, 1)
+    i + 1
+  }
+
+ret
+
+
+draw_houses:
+
+  i = 1
+  while (i <= hcount)
+  {
+    fpixi(house, -w / 2 + i * get_pixi_xsize(house), h/4 - get_pixi_ysize(house) / 2, 1, 0, housesf[i])
+    i + 1
+  }
+
+ret
+
+
+draw_moon:
+
+  i = 0
+  while(i < 6)
+  {
+    circle_x = w / 4
+    circle_y = -h / 4
+    circle_steps = 128
+    circle_color = #f0f070
+    if (i != 0)
+    {
+      transp(60 - 10 * i)
+      circle_r = 32 + i * 4 + 1 + csin(256 / 16 * f) * 2 / 128
+    }
+    else
+    {
+      circle_r = 32
+    }
+    circle
+    i + 1
+  }
+  transp(256)
+
+  circle_r = 8
+  circle_x = w / 4 + 32 * 2 / 5
+  circle_y = -h / 4 - 32 * 2 / 5
+  circle_steps = 8
+  circle_color = #f0f0b0
+  circle
+
+ret
+
+
+draw_back:
+
+  grad_y1 = -h / 2
+  grad_y2 = h / 4
+  grad_steps = (grad_y2 - grad_y1) / 10
+  grad_col1 = #000000
+  grad_col2 =  #9000cf
+  grad
+
+  grad_y1 = h / 4
+  grad_y2 = h / 2
+  grad_steps = (grad_y2 - grad_y1) / 5
+  grad_col1 = #002f00
+  grad_col2 =  #00cf00
+  grad
+
+ret
+
+
+draw_stars:
+
+  i = 0
+  while(i < scount)
+  {
+    fpixi(star, starsx[i], starsy[i], 1, 0, starsf[i] + f)
+    i + 1
+  }
+
+  f + 1
+  if (f > sfcount)
+  {
+    f = 0
+  }
+
+ret
+
+
+place_houses:
+
+  hcount = w / get_pixi_xsize(house) - 1
+  housesf = new_array(hcount)
+
+  i = 0
+  while(i < hcount)
+  {
+    housesf[i] = get_pixi_frames(house) * rand / 32767
+    i + 1
+  }
+
+ret
+
+
+place_stars:
+
+  step = 8
+  var = 4
+  scount = (w - step * 2) / step
+  sfcount = get_pixi_frames(star)
+  starsy = new_array(scount)
+  starsx = new_array(scount)
+  starsf = new_array(scount)
+
+  i =  0
+  while(i < scount)
+  {
+    starsx[ i ] = -w / 2 + (i + 1) * step + (-rand_max  + rand * 2) * var / rand_max 
+    starsy[ i ] = -h / 2 + step + (h / 2 + h / 4 - 2 * step) * rand / rand_max
+    starsf[ i ] = sfcount * rand / rand_max
+    i + 1
+  }
+
+ret
+
+
+init_house:
+
+  b = #000000
+  r = #ff0000
+  y= #ffff00
+
+  house = "
+..b..
+.bbb.
+bbbbb
+.bbb.
+.byb.
+.bbb.
++
+.bbb.
+.byb.
+bbbbb
+.bbb.
+.bbb.
+.bbb.
++
+.....
+..b..
+.bbb.
+bbbbb
+brbyb
+bbbbb
++
+.....
+.....
+......
+.bbb.
+bbbbb
+bbbbb
++
+.....
+.....
+..b..
+.bbb.
+bbrbb
+.bbb.
++
+bbbbb
+.b.b.
+.b.b.
+bbbbb
+brbyb
+bbbbb
++
+.bbb.
+bbbbb
+b.b.b
+b.b.b
+b.b.b
+bbbbb
++
+..r..
+..b..
+..b..
+..b..
+.bbb.
+bbbbb
++
+.b.b.
+bbbbb
+brbrb
+bbbbb
+bybyb
+bbbbb
++
+.rrr.
+.bbb.
+.yyy.
+.bbb.
+.yyy.
+.bbb.
++
+.....
+.....
+.....
+.....
+yryry
+bbbbb
++
+bbbbb
+bybyb
+bb.bb
+b...b
+b...b
+b...b
++
+..b..
+.bbb.
+..b..
+..b..
+..b..
+..b..
++
+..y..
+..b..
+r.b.r
+b.b.b
+.bbb.
+..b..
+"
+  make_pixi(house)
+
+ret
+
+
+init_star:
+
+  O = #FFFFFF
+  o = #A0A0A8
+
+  star = "
+..o..
+.oOo.
+oOOOo
+.oOo.
+..o..
++
+..o..
+..o..
+ooOoo
+..o..
+..o..
++
+.....
+..o..
+.oOo.
+..o..
+.....
++
+.....
+.....
+..O..
+.....
+.....
++
+.....
+.....
+..o..
+.....
+.....
++
+.....
+.....
+..O..
+.....
+.....
++
+.....
+.o.o.
+..O..
+.o.o.
+.....
++
+o...o
+.o.o.
+..O..
+.o.o.
+o...o
++
+o...o
+.OoO.
+.oOo.
+.OoO.
+o...o
++
+o...o
+.o.o.
+..O..
+.o.o.
+o...o
++
+.....
+.o.o.
+..O..
+.o.o.
+.....
++
+.....
+.....
+..O..
+.....
+.....
++
+.....
+.....
+..o..
+.....
+.....
++
+.....
+.....
+..O..
+.....
+.....
++
+.....
+..o..
+.oOo.
+..o..
+.....
++
+..o..
+..o..
+ooOoo
+..o..
+..o..
+"
+  make_pixi(star)
+
+ret
+
+
+init_tree:
+
+  g = #a0f030
+  d = #80c010
+  k = #7d7d30
+
+  tree = "
+...........g...........
+..........ggg..........
+.........ggggg.........
+........ggggggg........
+...........g...........
+..........ggg..........
+.........ggggg.........
+........ggggggg........
+.......ggggggggg.......
+......ggggggggggg......
+.....ggggggggggggg.....
+....ggggggggggggggg....
+...........g...........
+..........ggg..........
+.........ggggg.........
+........ggggggg........
+.......ggggggggg.......
+......ggggggggggg......
+.....ggggggggggggg.....
+....ggggggggggggggg....
+...ggggggggggggggggg...
+..ggggggggggggggggggg..
+.ggggggggggggggggggggg.
+ggggggggggggggggggggggg
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
+..........kkk..........
++
+...d...
+..ddd..
+...d...
+..ddd..
+.ddddd.
+...d...
+..ddd.
+.ddddd.
+ddddddd
+...k...
+...k...
+...k...
+"
+  make_pixi(tree)
+
+ret
+
+
+circle:
+
+  z = 0
+  while(z < circle_steps)
+  {
+  triangle(circle_x, circle_y, circle_x + ccos(256 * z / circle_steps) * circle_r / 128, circle_y + csin(256 * z / circle_steps) * circle_r / 128, circle_x + ccos(256 * (z + 1) / circle_steps) * circle_r / 128, circle_y + csin(256 * (z + 1) / circle_steps) * circle_r / 128, circle_color)
+    z + 1
+  }
+
+ret
+
+
+grad:
+
+  z = 0
+  step_h = (grad_y2 - grad_y1) / grad_steps
+  step_c = 255 / (grad_steps - 1)
+  while(z < grad_steps)
+  {
+    fbox(-w / 2, grad_y1 + z * step_h, w, step_h, get_blend(grad_col1, grad_col2, z * step_c) )
+    z + 1
+  }
+
+ret

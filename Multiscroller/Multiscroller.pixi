@@ -1,0 +1,112 @@
+﻿//------------------------------------------------------------
+// Multiscroller Effect
+// by Vitaly Obukhov
+// December 2008
+//------------------------------------------------------------
+
+w = get_window_xsize
+h = get_window_ysize
+
+init_vars
+
+draw:
+
+  clear(0)
+  draw_stripes
+  frame(25)
+
+go draw
+
+
+draw_stripes:
+
+  if (alpha > 256)
+  {
+    alpha = 0
+  }
+
+  i = num - 1
+  while(i >= 0)
+  {
+    offset = csin(alpha + deltas[ i ]) * amp / 128
+    grad_y1 = -20 + offset
+    grad_y2 = 20 + offset
+
+    grad_col1 = colors1[ i ]
+    grad_col2 = colors2[ i ]
+    double_grad
+
+    i - 1
+  }
+
+  alpha + dalpha
+
+ret
+
+
+init_vars:
+
+  num = 5
+  deltas = new_array(num)
+  colors1 = new_array(num)
+  colors2 = new_array(num)
+  bar_h = h / 8
+  dalpha = 2
+  alpha = 0
+  grad_steps = 10
+  amp = h / 2 - bar_h / 2
+
+  i = 0
+  while(i < num)
+  {
+    deltas[ i ] = -bar_h * i / 2
+    i + 1
+  }
+
+  colors1[ 0 ] = #5F0000
+  colors2[ 0 ] = #FF1010
+  colors1[ 1 ] = #005F00
+  colors2[ 1 ] = #10FF10
+  colors1[ 2 ] = #00005F
+  colors2[ 2 ] = #1010FF
+  colors1[ 3 ] = #5F5F00
+  colors2[ 3 ] = #FFFF10
+  colors1[ 4 ] = #5F005F
+  colors2[ 4 ] = #FF10FF
+
+ret
+
+
+double_grad:
+
+  temp1 = grad_steps
+
+  grad_steps / 2
+  grad_y2 = grad_y1 + (grad_y2 - grad_y1) / 2
+  vert_grad
+
+  temp2 = grad_y2 - grad_y1
+  grad_y1 = grad_y2
+  grad_y2 = grad_y1 + temp2
+  temp2 = grad_col1
+  grad_col1 = grad_col2
+  grad_col2 = temp2
+  vert_grad
+
+grad_steps = temp1
+
+ret
+
+
+vert_grad:
+
+  z = 0
+  step_h = (grad_y2 - grad_y1) / grad_steps
+  step_c = 255 / (grad_steps - 1)
+  while(z < grad_steps)
+  {
+    fbox(-w / 2, grad_y1 + z * step_h, w, step_h, get_blend(grad_col1, grad_col2, z * step_c) )
+    z + 1
+  }
+
+ret

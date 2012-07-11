@@ -1,0 +1,104 @@
+//------------------------------------------------------------
+// Darwinians
+// by Vitaly Obukhov
+// December 2008
+//------------------------------------------------------------
+
+h = get_window_ysize
+w = get_window_xsize
+
+init_vars
+
+draw:
+
+  clear(0)
+  draw_mans
+  frame(40)
+
+goto draw
+
+
+draw_mans:
+
+  i = 0
+  while (i < num)
+  {
+    pixi(man, x[i], y[i], sz[i], 0)
+    x[i] = x[i] + sp[i]
+    if (x[i] > w / 2 + manw * sz[i] / 2 )
+    {
+      setnew
+    }
+    i + 1
+  }
+
+ret
+
+
+init_vars:
+
+  num = 10
+  x = new_array(num)
+  y = new_array(num)
+  sz = new_array(num)
+  sp = new_array(num)
+  minsp = 1
+  maxsp = 11
+  minsz = 1
+  maxsz = 6
+
+  b = #007f00
+  s = #00ff00
+
+  man = "
+...sssss...
+...sbbbs...
+...sbbbs...
+ssssbbbssss
+sbbbbbbbbbs
+sbbbbbbbbbs
+sbbbbbbbbbs
+ssssbbbssss
+...sbbbs...
+ssssbbbssss
+sbbbbbbbbbs
+sbbbbbbbbbs
+sbbbbbbbbbs
+sbbbs.sbbbs
+sbbbs.sbbbs
+sbbbs.sbbbs
+sssss.sssss
+"
+  make_pixi (man)
+  manh = get_pixi_ysize(man)
+  manw = get_pixi_xsize(man)
+
+  i = 0
+  while (i < num)
+  {
+    setnew
+    i + 1
+  }
+
+ret
+
+
+setnew:
+
+  newone
+  x[i] = x1
+  y[i] = y1
+  sp[i] = sp1
+  sz[i] = sz1
+
+ret 
+
+
+newone:
+
+  sz1 = minsz + (maxsz - minsz) * rand / 32767
+  sp1 = minsp + (maxsp - minsp) * rand / 32767
+  x1 = -w / 2 - manw * sz1 / 2
+  y1 = -h / 2 + manh * sz1 / 2 + (h - manh * sz1) * rand / 32767
+
+ret

@@ -1,0 +1,892 @@
+п»ї//------------------------------------------------------------
+// Conway's Game of Life
+// by Vitaly Obukhov
+// version 0.42
+// January 2009
+//------------------------------------------------------------
+
+//------------------------------------------------------------
+// Main loop
+//------------------------------------------------------------
+
+init_pics
+init_vars
+
+mainloop:
+
+  handle_pen_keys(handle_st_down, handle_st_move, handle_st_up)
+  handle_press
+
+  if (simulate = 1)
+  {
+    if (record = 1 | get_timer(0) >= sp)
+    {
+      next_matrix
+      start_timer(0)
+    }
+  }
+
+  draw_matrix
+
+  if (record = 0)
+  {
+    frame(stepsp)
+  }
+  else
+  {
+    frame(sp)
+  }
+
+  if (shot = 1)
+  {
+    shot = 0
+    stop_video_export
+  }
+
+goto mainloop
+
+//------------------------------------------------------------
+// Stylus move handler
+//------------------------------------------------------------
+
+handle_st_move:
+
+  j = (gpx + w / 2) / stepx
+  i = (gpy + h / 2) / stepy
+
+  if (i >= 0 & i < col_sz & j >= 0 & j < row_sz)
+  {
+    if (flag_from_st_down = 1 | last_i != i | last_j != j)
+    {
+      kmax = brush_s / 2
+
+      k1 = -kmax
+      while(k1 <= kmax)
+      {
+        k2 = -kmax
+        while(k2 <= kmax)
+        {
+          ik = (gpy + h / 2) / stepy + k1
+          jk = (gpx + w / 2) / stepx + k2
+
+          if (ik >= 0 & ik < col_sz & jk >= 0 & jk < row_sz)
+          {
+            if (brush_m = 0)
+            {
+              matrix[jk + ik * row_sz] = 1
+              goto nextk2
+            }
+
+            if (brush_m = 1)
+            {
+              if (matrix[jk + ik * row_sz] = 1)
+              {
+                matrix[jk + ik * row_sz] = 0
+              }
+              else
+              {
+                matrix[jk + ik * row_sz] = 1
+              }
+              goto nextk2
+            }
+            
+            matrix[jk + ik * row_sz] = 0
+          }
+
+nextk2:
+          k2 + 1
+        }
+
+        k1 + 1
+      }
+
+      last_i = i
+      last_j = j
+    }
+  }
+
+ret
+
+//------------------------------------------------------------
+// Stylus down hander
+//------------------------------------------------------------
+
+handle_st_down:
+
+  flag_st_down = 1
+  flag_from_st_down = 1
+  handle_st_move
+  flag_from_st_down = 0
+
+  if(gpr(button_reduce_x - b_x /2, button_reduce_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_minus
+    ret
+  }
+
+  if(gpr(button_speed_x - b_x, button_speed_y - b_y, b_x * 2, b_y) = 1)
+  {
+    handle_speed
+    ret
+  }
+
+  if(gpr(button_add_x - b_x /2, button_add_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_plus
+    ret
+  }
+
+  if(gpr(button_play_x - b_x /2, button_play_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_play
+    ret
+  }
+
+  if(gpr(button_next_x - b_x /2, button_next_y - b_y / 2, b_x, b_y) = 1)
+  {
+    next_matrix
+    ret
+  }
+
+  if(gpr(button_shot_x - b_x /2, button_shot_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_shot
+    ret
+  }
+
+  if(gpr(button_rec_x - b_x /2, button_rec_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_record
+    ret
+  }
+
+  if(gpr(button_mode_x - b_x /2, button_mode_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_mode
+    ret
+  }
+
+  if(gpr(button_size_x - b_x /2, button_size_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_size
+    ret
+  }
+
+  if(gpr(button_clear_x - b_x /2, button_clear_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_clear
+    ret
+  }
+
+  if(gpr(button_invert_x - b_x /2, button_invert_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_invert
+    ret
+  }
+
+  if(gpr(button_save_x - b_x /2, button_save_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_save
+    ret
+  }
+
+  if(gpr(button_load_x - b_x /2, button_load_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_load
+    ret
+  }
+
+  if(gpr(button_tile_x - b_x /2, button_tile_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_tile
+    ret
+  }
+
+  if(gpr(button_detile_x - b_x /2, button_detile_y - b_y / 2, b_x, b_y) = 1)
+  {
+    handle_detile
+    ret
+  }
+
+ret
+
+//------------------------------------------------------------
+// Stylus up handler
+//------------------------------------------------------------
+
+handle_st_up:
+
+  flag_st_down = 0
+
+ret
+
+//------------------------------------------------------------
+// Stylus hold handler
+//------------------------------------------------------------
+
+handle_press:
+
+  if (flag_st_down = 1 & get_timer(1) >= stepsp * 10)
+  {
+    start_timer(1)
+
+    if(gpr(button_reduce_x - b_x /2, button_reduce_y - b_y / 2, b_x, b_y) = 1)
+    {
+      handle_minus
+      ret
+    }
+
+    if(gpr(button_add_x - b_x /2, button_add_y - b_y / 2, b_x, b_y) = 1)
+    {
+      handle_plus
+      ret
+    }
+  }
+
+ret
+
+//------------------------------------------------------------
+// Speed down button handler
+//------------------------------------------------------------
+
+handle_minus:
+
+  if (sp > minsp)
+  {
+    sp - stepsp
+    pixi(button_speed, button_speed_x, button_speed_y, 1, 0, 0)
+    print("$sp", text_speed_x, text_speed_y, 0)
+    start_timer(1)
+  }
+
+ret
+
+//------------------------------------------------------------
+// Speed reset handler
+//------------------------------------------------------------
+
+handle_speed:
+
+  sp = 100
+  pixi(button_speed, button_speed_x, button_speed_y, 1, 0, 0)
+  print("$sp", text_speed_x, text_speed_y, 0)
+
+ret
+
+//------------------------------------------------------------
+// Speed up button handler
+//------------------------------------------------------------
+
+handle_plus:
+
+  if (sp < maxsp)
+  {
+    sp + stepsp
+    pixi(button_speed, button_speed_x, button_speed_y, 1, 0, 0)
+    print("$sp", text_speed_x, text_speed_y, 0)
+    start_timer(1)
+  }
+
+ret
+
+//------------------------------------------------------------
+// Life / Freeze button handler
+//------------------------------------------------------------
+
+handle_play:
+
+  if (simulate = 0)
+  {
+    start_timer(0)
+    simulate = 1
+    fpixi(button_play, button_play_x, button_play_y, 1, 0, 1)
+  }
+  else
+  {
+    simulate = 0
+    fpixi(button_play, button_play_x, button_play_y, 1, 0, 0)
+  }
+
+ret
+
+//------------------------------------------------------------
+// Screenshot button handler
+//------------------------------------------------------------
+
+handle_shot:
+
+  if (record != 1 & file_dialog(str, "Сохранение снимка в gif", "gif", "rec.tmp") = 1)
+  {
+    shot = 1
+    video_export_gif(str, -w / 2, -h / 2, w, h - panel_size)
+  }
+
+ret
+
+//------------------------------------------------------------
+// Video capture button handler
+//------------------------------------------------------------
+
+handle_record:
+
+  if (shot != 1)
+  {
+    if (record = 0)
+    {
+      if (file_dialog(str, "Сохранение видео в gif", "gif", "rec.tmp") = 1)
+      {
+        video_export_gif(str, -w / 2, -h / 2, w, h - panel_size)
+        record = 1
+        fpixi(button_rec, button_rec_x, button_rec_y, 1, 0, 1)
+      }
+    }
+    else
+    {
+      stop_video_export
+      record = 0
+      fpixi(button_rec, button_rec_x, button_rec_y, 1, 0, 0)
+    }
+  }
+
+ret
+
+//------------------------------------------------------------
+// Brush mode button handler
+//------------------------------------------------------------
+
+handle_mode:
+
+  if (brush_m < 2)
+  {
+    brush_m + 1
+  }
+  else
+  {
+    brush_m = 0
+  }
+  fpixi(button_mode, button_mode_x, button_mode_y, 1, 0, brush_m)
+
+ret
+
+//------------------------------------------------------------
+// Brush size button handler
+//------------------------------------------------------------
+
+handle_size:
+
+  if (brush_s < 5)
+  {
+    brush_s + 2
+  }
+  else
+  {
+    brush_s = 1
+  }
+  fpixi(button_size, button_size_x, button_size_y, 1, 0, brush_s / 2)
+
+ret
+
+//------------------------------------------------------------
+// Invert button handler
+//------------------------------------------------------------
+
+handle_invert:
+
+  i = 0
+  while(i < col_sz)
+  {
+    j = 0
+    while(j < row_sz)
+    {
+      if (matrix[j + i * row_sz] = 1)
+      {
+        matrix[j + i * row_sz] = 0
+      }
+      else
+      {
+        matrix[j + i * row_sz] = 1
+      }
+
+      j + 1
+    }
+
+    i + 1
+  }
+ 
+ret
+
+//------------------------------------------------------------
+// Clear button handler
+//------------------------------------------------------------
+
+handle_clear:
+
+  erase_matrix
+  if (simulate = 1)
+  {
+    handle_play
+  }
+
+ret
+
+//------------------------------------------------------------
+// Save world button handler
+//------------------------------------------------------------
+
+handle_save:
+
+  if (file_dialog(str, "Сохранить запись", "dat", "saveload.tmp") = 1)
+  {
+    file = fopen(str, "wb")
+    
+    i = 0
+    while(i < col_sz)
+    {
+      j = 0
+
+      while(j < row_sz)
+      {
+        if (matrix[j + i * row_sz] = 0)
+        {
+          fputc('0', file)
+        }
+        else
+        {
+          fputc('1', file)
+        }
+
+        j + 1
+      }
+
+      fputc('2', file)
+      i + 1
+    }
+
+    fputc('3', file)
+    fclose(file)
+  }
+
+ret
+
+//------------------------------------------------------------
+// Load world button handler
+//------------------------------------------------------------
+
+handle_load:
+
+  if (file_dialog(str, "Загрузить запись", "dat", "saveload.tmp") = 1)
+  {
+    file = fopen(str, "rb")
+    
+    i = 0
+    rl = 0
+
+read:
+
+    if (rl > row_sz | i > row_sz * col_sz)
+    {
+      goto readed
+    }
+
+    ch = fgetc(file)
+
+    if (ch = '0')
+    {
+      load_matrix[i] = 0
+      rl + 1
+      i + 1
+      goto read
+    }
+
+    if (ch = '1')
+    {
+      load_matrix[i] = 1
+      rl + 1
+      i + 1
+      goto read
+    }
+
+    if (ch = '2')
+    {
+      if (rl != row_sz)
+      {
+        goto readed
+      }
+
+      orl = rl
+      rl = 0
+      goto read
+    }
+
+    if (ch !='3')
+    {
+      goto readed
+    }
+
+    row_sz = orl
+    col_sz = i / row_sz
+
+    j = 0
+    while(j < i)
+    {
+      matrix[j] = load_matrix[j]
+      j + 1
+    }
+
+    reset_interface
+
+readed:
+   
+    fclose(file)
+  }
+  
+
+ret
+
+//------------------------------------------------------------
+// Load tile button handler
+//------------------------------------------------------------
+
+handle_tile:
+
+  if (file_dialog(str, "Загрузить изображение", "gif", "tile.tmp") = 1)
+  {
+    old_stepx = stepx
+    old_stepy = stepy
+    tmpcell = load_pixi(str)
+
+    if (get_pixi_xsize(tmpcell) > w | get_pixi_ysize(tmpcell) > h - panel_size)
+    {
+      remove_pixi(tmpcell)
+      ret
+    }
+
+    cell = clone_pixi(tmpcell, 0)
+    remove_pixi(tmpcell)
+
+    if (old_stepx != get_pixi_xsize(cell) | old_stepy != get_pixi_ysize(cell))
+    {
+      init_sizes
+    }
+    else
+    {
+      reset_interface
+    }
+  }
+
+ret
+
+//------------------------------------------------------------
+// Load default tile button handler
+//------------------------------------------------------------
+
+handle_detile:
+
+  old_stepx = stepx
+  old_stepy = stepy
+  cell = load_pixi("0:/cell.gif")
+
+  if (old_stepx != get_pixi_xsize(cell) | old_stepy != get_pixi_ysize(cell))
+  {
+    init_sizes
+  }
+  else
+  {
+    reset_interface
+  }
+
+ret
+
+//------------------------------------------------------------
+// Cellular automate step (get next matrix from current matrix)
+//------------------------------------------------------------
+
+next_matrix:
+
+  i = 0
+  while(i < col_sz)
+  {
+    j = 0
+    while(j < row_sz)
+    {
+      sum = 0
+
+      k = 0
+      while(k < 8)
+      {
+        newj = j + off_matrix[2 * k]
+        newi = i + off_matrix[2 * k+1]
+
+        if (newi >=0 & newi < col_sz & newj >= 0 & newj < row_sz)
+        {
+          sum = sum + matrix[newi * row_sz + newj]
+        }
+       
+        k + 1
+      }
+
+      if (sum = 3 | (sum = 2 & matrix[i * row_sz + j] = 1))
+      {
+        new_matrix[i * row_sz + j] = 1
+      }
+      else
+      {
+        new_matrix[i * row_sz + j] = 0
+      }
+
+      j + 1
+    }
+
+    i + 1
+  }
+
+  i = 0
+  while(i < col_sz)
+  {
+    j = 0
+    while(j < row_sz)
+    {
+    matrix[i * row_sz + j] = new_matrix[i * row_sz + j]
+
+    j + 1
+    }
+
+  i + 1
+  }
+
+ret
+
+//------------------------------------------------------------
+// Initialize all variables
+//------------------------------------------------------------
+
+init_vars:
+
+  w = get_window_xsize
+  h = get_window_ysize
+
+  b_x = get_pixi_xsize(button_null)
+  b_y = get_pixi_ysize(button_null)
+  bp_x = get_pixi_xsize(back_plate)
+  bp_y = get_pixi_ysize(back_plate)
+
+  b_x1 = -w / 2 + b_x / 2 + (w - b_x * 8) / 2
+
+  button_reduce_x = b_x1
+  button_speed_x = button_reduce_x + b_x * 3 / 2
+  text_speed_x = button_speed_x - b_x / 2
+  button_add_x = button_speed_x + b_x * 3 / 2
+  button_play_x = button_add_x + b_x
+  button_next_x = button_play_x + b_x
+  button_shot_x = button_next_x + b_x
+  button_rec_x = button_shot_x + b_x
+
+  button_mode_x = b_x1
+  button_size_x = button_mode_x + b_x
+  button_clear_x = button_size_x + b_x
+  button_invert_x = button_clear_x + b_x
+  button_save_x = button_invert_x + b_x
+  button_load_x = button_save_x + b_x
+  button_tile_x = button_load_x + b_x
+  button_detile_x = button_tile_x + b_x
+
+  video_export_hq(1)
+
+  sp = 100
+  maxsp = 1000
+  minsp = 10
+  stepsp = 10
+
+  flag_from_st_down = 0
+  flag_st_down = 0
+
+  init_sizes
+
+  off_matrix = new_array(16)
+  load_matrix = new_array(w * (h - panel_size))
+  str = new_string(512)
+
+  off_matrix[0] = -1  off_matrix[1] = -1  off_matrix[2] = 0  off_matrix[3] = -1  off_matrix[4] = 1  off_matrix[5] = -1
+  off_matrix[6] = -1  off_matrix[7] = 0                                          off_matrix[8] = 1  off_matrix[9] = 0
+  off_matrix[10] = -1 off_matrix[11] = 1  off_matrix[12] = 0 off_matrix[13] = 1  off_matrix[14] = 1 off_matrix[15] = 1
+
+ret
+
+//------------------------------------------------------------
+// Initialize tile-depended variables
+//------------------------------------------------------------
+
+init_sizes:
+
+  stepx = get_pixi_xsize(cell)
+  stepy = get_pixi_ysize(cell)
+
+  panel_size = b_y * 2 + (h - b_y * 2) % stepy
+
+  row_sz = w / stepx
+  col_sz = (h - panel_size) / stepy
+  last_i = -1
+  last_j = -1
+
+  b_y1 = h / 2 - panel_size + b_y / 2
+  b_y2 = h / 2 - panel_size + b_y * 3 / 2
+
+  button_reduce_y = b_y1
+  button_speed_y = b_y1
+  text_speed_y = button_speed_y - b_y / 6
+  button_add_y = b_y1
+  button_play_y = b_y1
+  button_next_y = b_y1
+  button_shot_y = b_y1
+  button_rec_y = b_y1
+
+  button_mode_y = b_y2
+  button_size_y = b_y2
+  button_clear_y = b_y2
+  button_invert_y = b_y2
+  button_save_y = b_y2
+  button_load_y = b_y2
+  button_tile_y = b_y2
+  button_detile_y = b_y2
+
+  matrix = new_array(row_sz * col_sz)
+  erase_matrix
+  new_matrix = new_array(row_sz * col_sz)
+
+  draw_interface
+
+ret
+
+//------------------------------------------------------------
+// Clear main matrix
+//------------------------------------------------------------
+
+erase_matrix:
+
+i = 0
+  while(i < row_sz * col_sz)
+  {
+    matrix[i] = 0
+    i + 1
+  }
+
+ret
+
+//------------------------------------------------------------
+// Draw panel
+//------------------------------------------------------------
+
+draw_interface:
+
+  clear(0)
+
+  i = h / 2 - panel_size + bp_y / 2
+  while(i < h / 2 + bp_y)
+  {
+    j = -w / 2 + bp_x / 2
+    while(j < w / 2 + bp_x)
+    {
+      pixi(back_plate, j, i, 0, 0)
+      j + bp_x
+    }
+    i + bp_y
+  }
+
+  reset_interface
+
+  fpixi(button_reduceadd, button_reduce_x, button_reduce_y, 1, 0, 0)
+  pixi(button_speed, button_speed_x, button_speed_y, 1, 0, 0)
+  print("$sp", text_speed_x, text_speed_y, 0)
+  fpixi(button_reduceadd, button_add_x, button_add_y, 1, 0, 1)
+  pixi(button_next, button_next_x, button_next_y, 1, 0)
+  pixi(button_shot, button_shot_x, button_shot_y, 1, 0)
+  pixi(button_clear, button_clear_x, button_clear_y, 1, 0)
+  pixi(button_invert,button_invert_x,button_invert_y, 1, 0)
+  fpixi(button_saveload, button_load_x, button_load_y, 1, 0, 0)
+  fpixi(button_saveload, button_save_x, button_save_y, 1, 0, 1)
+  pixi(button_tile, button_tile_x, button_tile_y, 1, 0)
+  pixi(button_detile, button_detile_x, button_detile_y, 1, 0)
+
+ret
+
+//------------------------------------------------------------
+// Reset variables
+//------------------------------------------------------------
+
+reset_interface:
+
+  simulate = 0
+  record = 0
+  shot = 0
+  brush_s = 1
+  brush_m = 1
+  stop_video_export
+
+  fpixi(button_play, button_play_x, button_play_y, 1, 0, 0)
+  fpixi(button_rec, button_rec_x, button_rec_y, 1, 0, 0)
+  fpixi(button_mode, button_mode_x, button_mode_y, 1, 0, 1)
+  fpixi(button_size, button_size_x, button_size_y, 1, 0, 0)
+
+ret
+
+//------------------------------------------------------------
+// Draw cellular matrix
+//------------------------------------------------------------
+
+draw_matrix:
+
+  i = 0
+  while(i < col_sz)
+  {
+    j = 0
+    while(j < row_sz)
+    {
+      if (matrix[j + i * row_sz] = 0)
+      {
+        fpixi(cell, -w / 2 + stepx / 2 + j * stepx, -h / 2 + stepy / 2 + i * stepy, 1, 0, 0)
+      }
+      else
+      {
+        fpixi(cell, -w / 2 + stepx / 2 + j * stepx, -h / 2 + stepy / 2 + i * stepy, 1, 0, 1)
+      }
+
+      j + 1
+    }
+
+  i + 1
+  }
+
+ret
+
+//------------------------------------------------------------
+// Initialize sprites
+//------------------------------------------------------------
+
+init_pics:
+
+  set_disk0("life.tar")
+
+  cell = load_pixi("0:/cell.gif")
+  button_reduceadd = load_pixi("0:/button_reduceadd.gif")
+  button_speed = load_pixi("0:/button_speed.gif")
+  button_play = load_pixi("0:/button_lifefreeze.gif")
+  button_next = load_pixi("0:/button_next.gif")
+  button_rec = load_pixi("0:/button_recordstop.gif")
+  button_shot = load_pixi("0:/button_shot.gif")
+  button_mode = load_pixi("0:/button_mode.gif")
+  button_size = load_pixi("0:/button_size.gif")
+  button_clear = load_pixi("0:/button_clear.gif")
+  button_invert = load_pixi("0:/button_invert.gif")
+  button_saveload = load_pixi("0:/button_loadsave.gif")
+  button_tile = load_pixi("0:/button_tile.gif")
+  button_detile = load_pixi("0:/button_detile.gif")
+  button_null = load_pixi("0:/button_null.gif")
+
+  back_plate = "
+155
+515
+551
+"
+  make_pixi(back_plate)
+
+ret
